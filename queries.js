@@ -1,14 +1,14 @@
 const Pool = require("pg").Pool;
 const pool = new Pool({
-  user: "me",
+  user: "noe",
   host: "localhost",
   database: "afib_dm",
-  password: "admin",
+  password: "noe",
   port: 5432,
 });
 
-const getUsers = (request, response) => {
-  pool.query("SELECT * FROM users ORDER BY id ASC", (error, results) => {
+const getAccounts = (request, response) => {
+  pool.query("SELECT * FROM compte", (error, results) => {
     if (error) {
       throw error;
     }
@@ -16,28 +16,36 @@ const getUsers = (request, response) => {
   });
 };
 
-const getUserById = (request, response) => {
-  const id = parseInt(request.params.id);
-
-  pool.query("SELECT * FROM users WHERE id = $1", [id], (error, results) => {
-    if (error) {
-      throw error;
-    }
-    response.status(200).json(results.rows);
-  });
-};
-
-const createUser = (request, response) => {
-  const { name, email } = request.body;
+const getUserByRacine = (request, response) => {
+  const racine = parseInt(request.params.racine_compte);
 
   pool.query(
-    "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *",
-    [name, email],
+    "SELECT * FROM compte WHERE racine_compte = $1",
+    [racine],
     (error, results) => {
       if (error) {
         throw error;
       }
-      response.status(201).send(`User added with ID: ${results.rows[0].id}`);
+      response.status(200).json(results.rows);
+    }
+  );
+};
+
+const createUser = (request, response) => {
+  const { id_compte, nom_compte, prenom_compte, racine_compte, statut, type_compte } =
+    request.body;
+
+  pool.query(
+    "INSERT INTO compte (id_compte,nom_compte, prenom_compte, racine_compte, statut,type_compte ) VALUES ($1, $2,$3,$4,$5,$6) RETURNING *",
+    [id_compte, nom_compte, prenom_compte, racine_compte, statut, type_compte],
+    (error, results) => {
+      if (error) {
+        console.log("error: ", error);
+        // return error;
+        response.status(404).send(JSON.stringify(error))
+        throw error;
+      }
+      response.status(201).send(results.rows);
     }
   );
 };
@@ -70,8 +78,8 @@ const deleteUser = (request, response) => {
 };
 
 module.exports = {
-  getUsers,
-  getUserById,
+  getAccounts,
+  getUserByRacine,
   createUser,
   updateUser,
   deleteUser,
